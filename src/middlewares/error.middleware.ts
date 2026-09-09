@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express"
 
 export class AppError extends Error {
-  public readonly statusCode: number;
+  public readonly statusCode: number
 
   constructor(message: string, statusCode = 400) {
-    super(message);
-    this.statusCode = statusCode;
-    Object.setPrototypeOf(this, new.target.prototype);
+    super(message)
+    this.statusCode = statusCode
+    Object.setPrototypeOf(this, new.target.prototype)
   }
 }
 
@@ -21,14 +21,14 @@ export const errorHandler = (
     res.status(error.statusCode).json({
       status: "error",
       message: error.message,
-    });
-    return;
+    })
+    return
   }
 
-  console.error("Unexpected System Error:", error);
+  console.error("Unexpected System Error:", error)
 
   res.status(500).json({
     status: "error",
     message: "Internal server error.",
-  });
-};
+  })
+}

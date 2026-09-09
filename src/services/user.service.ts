@@ -58,7 +58,6 @@ export class UserService {
     return user
   }
 
-
   public async createUser(data: CreateUserData) {
     if (!data.name || data.name.trim().length < 2) {
       throw new AppError("Name must be at least 2 characters long.", 400)
@@ -107,7 +106,6 @@ export class UserService {
       },
     })
   }
-
 
   public async updateUser(id: string, data: UpdateUserData) {
     const userExists = await prisma.user.findUnique({

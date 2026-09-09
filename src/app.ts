@@ -13,7 +13,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next()
 })
 
-app.use("/api", router)
+app.use("/api/v1/", router)
 
 app.use(errorHandler)
 
