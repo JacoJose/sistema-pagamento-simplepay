@@ -1,136 +1,60 @@
-import type { Request, Response } from 'express'
-import { UserService } from '../services/user.service'
+import { Request, Response, NextFunction } from "express"
+import { UserService } from "../services/user.service"
 
-// Controller - Camada de apresentação
-// Responsável por lidar com requisições HTTP e respostas
-// Delega a lógica de negócios para o Service
+const userService = new UserService()
+
 export class UserController {
-  private userService: UserService
-
-  constructor() {
-    this.userService = new UserService()
+  public async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await userService.getAllUsers()
+      res.status(200).json(users)
+    } catch (error) {
+      next(error)
+    }
   }
 
-  async criarUsuario(req: Request, res: Response): Promise<Response> {
+  public async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const user = await this.userService.createUser(req.body)
+      const id = req.params.id as string
+      const user = await userService.getUserById(id)
+      res.status(200).json(user)
+    } catch (error) {
+      next(error)
+    }
+  }
 
-      return res.status(201).json({
-        message: 'Usuário criado com sucesso!',
-        timestamp: new Date().toISOString(),
+  public async create(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await userService.createUser(req.body)
+      res.status(201).json({
+        message: "User created successfully.",
         user,
       })
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'E-mail já cadastrado') {
-          return res.status(400).json({
-            erro: error.message
-          })
-        }
-      }
-
-      return res.status(500).json({
-        erro: 'Erro ao criar usuário',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-      })
+      next(error)
     }
   }
 
-  async listarUsuarios(req: Request, res: Response): Promise<Response> {
+  public async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const users = await this.userService.getAllUsers()
-
-      return res.status(200).json({
-        message: 'Lista de usuários',
-        data: users,
+      const id = req.params.id as string
+      const updatedUser = await userService.updateUser(id, req.body)
+      res.status(200).json({
+        message: "User updated successfully.",
+        user: updatedUser,
       })
     } catch (error) {
-      return res.status(500).json({
-        erro: 'Erro ao listar usuários',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-      })
+      next(error)
     }
   }
 
-  async buscarUsuarioPorId(req: Request, res: Response): Promise<Response> {
+  public async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const id = String(req.query.id)
-      const user = await this.userService.getUserById(id)
-
-      return res.status(200).json({
-        message: 'Detalhes do usuário',
-        user,
-        status: 'API funcionando!'
-      })
+      const id = req.params.id as string
+      const result = await userService.deleteUser(id)
+      res.status(200).json(result)
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Usuário não encontrado') {
-          return res.status(404).json({
-            erro: error.message
-          })
-        }
-      }
-
-      return res.status(500).json({
-        erro: 'Erro ao buscar usuário',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-      })
-    }
-  }
-
-  async atualizarUsuario(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = String(req.params.id)
-      const user = await this.userService.updateUser(id, req.body)
-
-      return res.status(200).json({
-        message: 'Usuário atualizado com sucesso!',
-        timestamp: new Date().toISOString(),
-        user,
-      })
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Usuário não encontrado') {
-          return res.status(404).json({
-            erro: error.message
-          })
-        }
-        if (error.message === 'E-mail já está sendo usado por outro usuário') {
-          return res.status(400).json({
-            erro: error.message
-          })
-        }
-      }
-
-      return res.status(500).json({
-        erro: 'Erro ao atualizar usuário',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-      })
-    }
-  }
-
-  async deletarUsuario(req: Request, res: Response): Promise<Response> {
-    try {
-      const id = String(req.params.id)
-      await this.userService.deleteUser(id)
-
-      return res.status(200).json({
-        message: 'Usuário deletado com sucesso!',
-        timestamp: new Date().toISOString(),
-      })
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Usuário não encontrado') {
-          return res.status(404).json({
-            erro: error.message
-          })
-        }
-      }
-
-      return res.status(500).json({
-        erro: 'Erro ao deletar usuário',
-        detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-      })
+      next(error)
     }
   }
 }

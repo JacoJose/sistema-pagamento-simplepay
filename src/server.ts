@@ -1,24 +1,11 @@
-import dotenv from 'dotenv'
-import express, { type Request, type Response } from 'express'
-import userRoutes from './routes/user.routes'
+import dotenv from "dotenv"
+import app from "./app"
 
 dotenv.config()
-const app = express()
-const port = process.env.PORT
 
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+const PORT = process.env.PORT || 3000
 
-app.get('/', (request: Request, response: Response) => {
-  response.json({
-    message: 'API funcionando!',
-    timestamp: new Date().toISOString()
-  })
-})
-
-app.use('/api/v1', [userRoutes])
-
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`)
-  console.log(`Health: http://localhost:${port}/health`)
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+  console.log(`API base URL: http://localhost:${PORT}/api`)
 })
