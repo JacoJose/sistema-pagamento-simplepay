@@ -119,7 +119,11 @@ export class UserService {
     })
   }
 
-  public async updateUser(id: string, data: UpdateUserData) {
+  public async updateUser(userId: string, id: string, data: UpdateUserData) {
+    if (userId !== id) {
+      throw new AppError("You need authorization to use it.", 403)
+    }
+
     const userExists = await prisma.user.findUnique({
       where: { id },
     })

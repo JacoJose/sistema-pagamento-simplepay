@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express"
 import { UserService } from "../services/user.service"
+import { AuthenticatedRequest } from "../middlewares/auth.middleware"
 
 const userService = new UserService()
 
@@ -38,7 +39,9 @@ export class UserController {
   public async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string
-      const updatedUser = await userService.updateUser(id, req.body)
+      const authReq = req as AuthenticatedRequest
+      const userId = authReq.user?.id!
+      const updatedUser = await userService.updateUser(userId, id, req.body)
       res.status(200).json({
         message: "User updated successfully.",
         user: updatedUser,
