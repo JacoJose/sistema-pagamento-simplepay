@@ -1,9 +1,10 @@
+import dotenv from "dotenv"
 import fs from "fs"
 import path from "path"
 
-const envUploadDir = process.env.UPLOAD_DIR
+dotenv.config()
 
-const directory = path.resolve(envUploadDir!)
+const directory = path.resolve(process.env.UPLOAD_DIR!)
 
 if (!fs.existsSync(directory)) {
   fs.mkdirSync(directory, { recursive: true })
