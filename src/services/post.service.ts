@@ -6,8 +6,10 @@ const prisma = new PrismaClient()
 export interface CreatePostData {
   title: string
   description: string
-  imageUrl: string
+  imageUrl?: string
   authorId: string
+  imageId?: string
+  imageIds?: string[]
 }
 
 export class PostService {
@@ -17,9 +19,6 @@ export class PostService {
     }
     if (!data.description || data.description.trim().length < 5) {
       throw new AppError("Description must be at least 5 characters long.", 400)
-    }
-    if (!data.imageUrl || !data.imageUrl.startsWith("http")) {
-      throw new AppError("A valid image URL is required.", 400)
     }
     if (!data.authorId) {
       throw new AppError("authorId is required to create a post.", 400)
@@ -37,13 +36,59 @@ export class PostService {
       throw new AppError("Business Rule Violation (BR01): Only MERCHANT/ENTREPRENEUR accounts can create post showcases.", 403)
     }
 
+    let finalImageUrl = data.imageUrl
+
+    const connectImages: { id: string }[] = []
+
+    if (data.imageId) {
+      const img = await prisma.image.findUnique({ where: { id: data.imageId } })
+      if (!img) {
+        throw new AppError(`Attached image with id '${data.imageId}' not found.`, 404)
+      }
+      connectImages.push({ id: data.imageId })
+      if (!finalImageUrl) {
+        finalImageUrl = img.url
+      }
+    }
+
+    if (data.imageIds && Array.isArray(data.imageIds)) {
+      for (const id of data.imageIds) {
+        const img = await prisma.image.findUnique({ where: { id } })
+        if (!img) {
+          throw new AppError(`Attached image with id '${id}' not found.`, 404)
+        }
+        connectImages.push({ id })
+        if (!finalImageUrl) {
+          finalImageUrl = img.url
+        }
+      }
+    }
+
+    if (!finalImageUrl || !finalImageUrl.startsWith("http")) {
+      throw new AppError("A valid image URL or imageId is required to create a post.", 400)
+    }
+
+    const postData: any = {
+      title: data.title,
+      description: data.description,
+      imageUrl: finalImageUrl,
+      authorId: data.authorId,
+      likesCount: 0,
+    }
+
+    if (connectImages.length > 0) {
+      postData.images = {
+        connect: connectImages,
+      }
+    }
+
     return await prisma.post.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        imageUrl: data.imageUrl,
-        authorId: data.authorId,
-        likesCount: 0,
+      data: postData,
+      include: {
+        author: {
+          select: { id: true, name: true, email: true, role: true, avatar: true },
+        },
+        images: true,
       },
     })
   }
@@ -78,6 +123,12 @@ export class PostService {
       data: {
         likesCount: post.likesCount + 1,
       },
+      include: {
+        author: {
+          select: { id: true, name: true, email: true, role: true, avatar: true },
+        },
+        images: true,
+      },
     })
   }
 
@@ -86,8 +137,9 @@ export class PostService {
       where: { id },
       include: {
         author: {
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, role: true, avatar: true },
         },
+        images: true,
         comments: true,
       },
     })
@@ -104,8 +156,9 @@ export class PostService {
       orderBy: { createdAt: "desc" },
       include: {
         author: {
-          select: { id: true, name: true, email: true, role: true },
+          select: { id: true, name: true, email: true, role: true, avatar: true },
         },
+        images: true,
       },
     })
   }

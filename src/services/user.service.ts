@@ -10,6 +10,7 @@ export interface CreateUserData {
   password: string
   role?: string
   zipCode: string
+  imageId?: string
 }
 
 export interface UpdateUserData {
@@ -18,10 +19,10 @@ export interface UpdateUserData {
   password?: string
   role?: string
   zipCode?: string
+  imageId?: string
 }
 
 export class UserService {
-
   public async getAllUsers() {
     return await prisma.user.findMany({
       select: {
@@ -30,6 +31,7 @@ export class UserService {
         email: true,
         role: true,
         zipCode: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -46,6 +48,7 @@ export class UserService {
         email: true,
         role: true,
         zipCode: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -87,20 +90,29 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10)
 
+    const createPayload: any = {
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      role: role,
+      zipCode: data.zipCode,
+    }
+
+    if (data.imageId) {
+      createPayload.avatar = {
+        connect: { id: data.imageId },
+      }
+    }
+
     return await prisma.user.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        password: hashedPassword,
-        role: role,
-        zipCode: data.zipCode,
-      },
+      data: createPayload,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         zipCode: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -142,6 +154,12 @@ export class UserService {
       updatePayload.password = await bcrypt.hash(data.password, 10)
     }
 
+    if (data.imageId) {
+      updatePayload.avatar = {
+        connect: { id: data.imageId },
+      }
+    }
+
     return await prisma.user.update({
       where: { id },
       data: updatePayload,
@@ -151,6 +169,7 @@ export class UserService {
         email: true,
         role: true,
         zipCode: true,
+        avatar: true,
         createdAt: true,
         updatedAt: true,
       },
