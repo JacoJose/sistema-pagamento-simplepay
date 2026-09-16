@@ -2,17 +2,16 @@ import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
 import { AppError } from "./error.middleware"
 
-export interface JwtUserPayload {
+export interface JwtMerchantPayload {
   id: string
   email: string
-  role: string
 }
 
 export interface AuthenticatedRequest extends Request {
-  user?: JwtUserPayload
+  user?: JwtMerchantPayload
 }
 
-export const authenticateUser = (
+export const authenticateMerchant = (
   req: AuthenticatedRequest,
   _res: Response,
   next: NextFunction
@@ -31,7 +30,7 @@ export const authenticateUser = (
 
   try {
     const jwtSecret = process.env.JWT_SECRET || "default_jwt_secret"
-    const decoded = jwt.verify(token, jwtSecret) as JwtUserPayload
+    const decoded = jwt.verify(token, jwtSecret) as JwtMerchantPayload
 
     req.user = decoded
     next()

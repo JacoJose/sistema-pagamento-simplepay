@@ -1,18 +1,10 @@
 import { Router } from "express"
-import authRoutes from "./auth.routes"
-import userRoutes from "./user.routes"
-import postRoutes from "./post.routes"
-import commentRoutes from "./comment.routes"
-import uploadRoutes from "./upload.routes"
+import { authRoutes } from "./auth.routes"
+import { merchantRoutes } from "./merchant.routes"
 
 const router = Router()
 
 router.use("/auth", authRoutes)
-router.use("/users", userRoutes)
-
-router.use("/posts", postRoutes)
-router.use("/comments", commentRoutes)
-router.use("/upload", uploadRoutes)
+router.use("/merchants", merchantRoutes)
 
 export default router
-

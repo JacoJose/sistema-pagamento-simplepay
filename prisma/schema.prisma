@@ -7,64 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Merchant {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
   password  String
-  role      String   @default("CONSUMER")
-  zipCode   String
+  document  String   @unique // CPF ou CNPJ
+  apiKey    String   @unique @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts     Post[]
-  comments  Comment[]
-  avatar    Image?
+  pixKeys PixKey[]
+  charges Charge[]
 
-  @@map("users")
+  @@map("merchants")
 }
 
-model Post {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  imageUrl    String
-  likesCount  Int       @default(0)
-  authorId    String
-  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments    Comment[]
-  images      Image[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model PixKey {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  type       String   // CPF, CNPJ, EMAIL, TELEFONE, CHAVE ALEATORIA
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 
-  @@map("posts")
+  charges Charge[]
+
+  @@map("pix_keys")
 }
 
-model Comment {
-  id        String   @id @default(uuid())
-  text      String
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Charge {
+  id          String   @id @default(uuid())
+  txid        String   @unique
+  amount      Float
+  status      String   @default("PENDING") // PENDING, PAID, CANCELLED
+  description String?
+  pixKeyId    String
+  pixKey      PixKey   @relation(fields: [pixKeyId], references: [id], onDelete: Cascade)
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@map("comments")
-}
-
-model Image {
-  id        String   @id @default(uuid())
-  filename  String
-  mimetype  String
-  url       String
-  createdAt DateTime @default(now())
-
-  userId    String?  @unique
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@map("images")
+  @@map("charges")
 }

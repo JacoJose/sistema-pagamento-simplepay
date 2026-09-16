@@ -5,22 +5,30 @@ import { AppError } from "../middlewares/error.middleware"
 
 const prisma = new PrismaClient()
 
-
-export interface RegisterDTO {
+export interface RegisterMerchantDTO {
   name: string
   email: string
   password: string
-  role?: string
-  zipCode: string
+  document: string
 }
 
-export interface LoginDTO {
+export interface LoginMerchantDTO {
   email: string
   password: string
 }
 
 export class AuthService {
-  public async register(data: RegisterDTO) {
+  private readonly merchantSelect = {
+    id: true,
+    name: true,
+    email: true,
+    document: true,
+    apiKey: true,
+    createdAt: true,
+    updatedAt: true,
+  }
+
+  public async register(data: RegisterMerchantDTO) {
     if (!data.name || data.name.trim().length < 2) {
       throw new AppError("Name must be at least 2 characters long.", 400)
     }
@@ -33,60 +41,53 @@ export class AuthService {
       throw new AppError("Password must be at least 6 characters long.", 400)
     }
 
-    if (!data.zipCode || data.zipCode.trim().length < 8) {
-      throw new AppError("A valid zip code is required.", 400)
+    if (!data.document || data.document.trim().length < 11) {
+      throw new AppError("A valid CPF or CNPJ document is required.", 400)
     }
 
-    const role = data.role === "MERCHANT" ? "MERCHANT" : "CONSUMER"
-
-    const existingUser = await prisma.user.findUnique({
+    const existingMerchant = await prisma.merchant.findUnique({
       where: { email: data.email },
     })
 
-    if (existingUser) {
-      throw new AppError("A user with this email already exists.", 400)
+    if (existingMerchant) {
+      throw new AppError("A merchant with this email already exists.", 400)
     }
 
-    const saltRounds = 10
-    const hashedPassword = await bcrypt.hash(data.password, saltRounds)
+    const existingDocument = await prisma.merchant.findUnique({
+      where: { document: data.document },
+    })
 
-    const user = await prisma.user.create({
+    if (existingDocument) {
+      throw new AppError("A merchant with this document already exists.", 400)
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10)
+
+    return await prisma.merchant.create({
       data: {
         name: data.name,
         email: data.email,
         password: hashedPassword,
-        role: role,
-        zipCode: data.zipCode,
+        document: data.document,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        zipCode: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: this.merchantSelect,
     })
-
-    return user
   }
 
-
-  public async login(data: LoginDTO) {
+  public async login(data: LoginMerchantDTO) {
     if (!data.email || !data.password) {
       throw new AppError("Email and password are required.", 400)
     }
 
-    const user = await prisma.user.findUnique({
+    const merchant = await prisma.merchant.findUnique({
       where: { email: data.email },
     })
 
-    if (!user) {
+    if (!merchant) {
       throw new AppError("Invalid email or password.", 401)
     }
 
-    const isPasswordValid = await bcrypt.compare(data.password, user.password)
+    const isPasswordValid = await bcrypt.compare(data.password, merchant.password)
 
     if (!isPasswordValid) {
       throw new AppError("Invalid email or password.", 401)
@@ -95,41 +96,31 @@ export class AuthService {
     const jwtSecret = process.env.JWT_SECRET || "default_jwt_secret"
     const token = jwt.sign(
       {
-        id: user.id,
-        email: user.email,
-        role: user.role,
+        id: merchant.id,
+        email: merchant.email,
       },
       jwtSecret,
       { expiresIn: "1d" }
     )
 
-    const { password, ...userWithoutPassword } = user
+    const { password, ...merchantWithoutPassword } = merchant
 
     return {
-      user: userWithoutPassword,
+      merchant: merchantWithoutPassword,
       token,
     }
   }
 
-
-  public async getProfile(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        zipCode: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+  public async getProfile(merchantId: string) {
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: merchantId },
+      select: this.merchantSelect,
     })
 
-    if (!user) {
-      throw new AppError("User profile not found.", 404)
+    if (!merchant) {
+      throw new AppError("Merchant profile not found.", 404)
     }
 
-    return user
+    return merchant
   }
 }
