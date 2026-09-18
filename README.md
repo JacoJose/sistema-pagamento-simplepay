@@ -1,4 +1,4 @@
-# Social Network & Image Module REST API
+# Sistema Pagamento SimplePay
 
 A modular RESTful API built with Node.js, TypeScript, Express, Prisma ORM, MySQL, JWT Authentication, and Multer for dynamic image uploads.
 
@@ -20,35 +20,23 @@ A modular RESTful API built with Node.js, TypeScript, Express, Prisma ORM, MySQL
 The application follows a 4-layer backend architecture:
 
 ```text
-projeto-01-rede-social/
+sistema-pagamento-simplepay/
 ├── prisma/
 │   └── schema.prisma         # Prisma schema & MySQL data model
 ├── src/
-│   ├── config/
-│   │   └── upload.config.ts  # Dynamic file storage configuration
 │   ├── controllers/
 │   │   ├── auth.controller.ts
-│   │   ├── comment.controller.ts
-│   │   ├── image.controller.ts
-│   │   ├── post.controller.ts
-│   │   └── user.controller.ts
+│   │   └── merchant.controller.ts
 │   ├── middlewares/
 │   │   ├── auth.middleware.ts    # JWT authentication middleware
-│   │   ├── error.middleware.ts   # Error handler middleware
-│   │   └── upload.middleware.ts  # Multer storage & file filter middleware
+│   │   └── error.middleware.ts   # Error handler middleware
 │   ├── routes/
 │   │   ├── auth.routes.ts
-│   │   ├── comment.routes.ts
 │   │   ├── index.ts              # API v1 main router
-│   │   ├── post.routes.ts
-│   │   ├── upload.routes.ts
-│   │   └── user.routes.ts
+│   │   └── merchant.routes.ts
 │   ├── services/
 │   │   ├── auth.service.ts
-│   │   ├── comment.service.ts
-│   │   ├── image.service.ts
-│   │   ├── post.service.ts
-│   │   └── user.service.ts
+│   │   └── merchant.service.ts
 │   ├── app.ts                    # Express application entry
 │   └── server.ts                 # Server startup
 ├── .env.example
@@ -60,133 +48,108 @@ projeto-01-rede-social/
 
 ## Prerequisites & Installation
 
-### Prerequisites
-- Node.js (v18 or higher)
-- MySQL Server
+Para realizar um teste limpo garantindo que o banco de dados e a compilação do TypeScript estejam zerados, siga o passo a passo abaixo no seu terminal.
 
-### 1. Clone & Install Dependencies
+**1. Limpeza e Compilação Zero Bug**
+
+Primeiro, apague a pasta de build antiga e valide se a compilação do TypeScript passa sem nenhum erro de tipo:
+
 ```bash
-git clone https://github.com/your-repo/projeto-01-rede-social.git
-cd projeto-01-rede-social
-npm install
+# Limpa a pasta dist
+npx rimraf dist
+
+# Compila o projeto TypeScript
+npx tsc --noEmit
+
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the project root:
+*Se o comando `npx tsc --noEmit` não retornar nenhuma mensagem de erro, o código está 100% tipado e pronto.*
 
-```env
-# Application
-PORT=3000
-NODE_ENV=development
-UPLOAD_DIR="C:/Users/wnn-dev/Pictures/uploads"
+---
 
-# Database
-DATABASE_URL="mysql://root:123456@localhost:3306/db_rede_social"
+**2. Reset do Banco de Dados (Prisma & MySQL)**
 
-# Security
-JWT_SECRET="TECINFO_2026_BPW"
+Para garantir dados zerados no MySQL e recriar as tabelas do zero com base no `schema.prisma`:
+
+```bash
+# Apaga o banco de dados de desenvolvimento e aplica a migration limpa
+npx prisma migrate reset
+
 ```
 
 ---
 
-## Database Migrations
+**3. Iniciar o Servidor**
 
-Run Prisma migrations to create database tables and generate Prisma Client:
+Inicie a aplicação em modo de desenvolvimento:
 
-```bash
-# Run database migrations
-npx prisma migrate dev --name init
-
-# Generate Prisma Client
-npx prisma generate
-```
-
----
-
-## Running the Application
-
-### Development Mode
 ```bash
 npm run dev
-```
 
-### Production Build & Start
-```bash
-npm run build
-npm start
 ```
-
-The server runs at `http://localhost:3000`. Uploaded static files are accessible via `http://localhost:3000/uploads/<filename>`.
 
 ---
 
-## API Endpoints Reference
+**4. Roteiro de Teste dos Endpoints (`/api/v1`)**
 
-Base Route: `/api/v1`
+Você pode testar a API no **Postman**, **Insomnia** ou via **cURL** executando as chamadas na sequência abaixo:
 
-| Method | Endpoint | Protection | Description |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/register` | Public | Register a new user account |
-| `POST` | `/api/v1/auth/login` | Public | Login and receive JWT access token |
-| `GET` | `/api/v1/users` | Bearer Token | List all users |
-| `GET` | `/api/v1/users/:id` | Bearer Token | Get user details by ID |
-| `POST` | `/api/v1/users` | Public / Admin | Create user account |
-| `PUT` | `/api/v1/users/:id` | Bearer Token | Update user info or set avatar `imageId` |
-| `DELETE` | `/api/v1/users/:id` | Bearer Token | Delete user account |
-| `POST` | `/api/v1/posts` | Bearer Token | Create a new post (Merchants only) |
-| `GET` | `/api/v1/posts` | Bearer Token | List all posts |
-| `GET` | `/api/v1/posts/:id` | Bearer Token | Get single post details |
-| `POST` | `/api/v1/posts/:id/like` | Bearer Token | Like a post |
-| `POST` | `/api/v1/comments` | Bearer Token | Add a comment to a post |
-| `GET` | `/api/v1/comments/post/:postId` | Bearer Token | List comments for a post |
-| `POST` | `/api/v1/upload` | Bearer Token | Upload single image (`multipart/form-data`) |
-| `GET` | `/api/v1/upload` | Bearer Token | List all uploaded images metadata |
-| `GET` | `/api/v1/upload/:id` | Bearer Token | Get image metadata by ID |
-| `DELETE` | `/api/v1/upload/:id` | Bearer Token | Delete image metadata & reference |
-
----
-
-## Sample Usage Examples
-
-### 1. Upload an Image (`POST /api/v1/upload`)
-- **Header**: `Authorization: Bearer <your_jwt_token>`
-- **Body**: `multipart/form-data` with field `image`
-- **Response (`201 Created`)**:
+* **Público — Cadastrar Merchant**
+* `POST http://localhost:3000/api/v1/merchants/register` (ou `/api/v1/auth/register`)
+* **Body (JSON):**
 ```json
 {
-  "message": "Image uploaded and metadata saved successfully.",
-  "image": {
-    "id": "a4d3f2e1-89ab-4cde-8012-3456789abcde",
-    "filename": "1773488000000-a1b2c3d4e5f67890.png",
-    "mimetype": "image/png",
-    "url": "http://localhost:3000/uploads/1773488000000-a1b2c3d4e5f67890.png",
-    "createdAt": "2026-09-14T08:30:00.000Z",
-    "userId": null,
-    "postId": null
-  }
+  "name": "Empresa Teste",
+  "email": "contato@empresa.com",
+  "password": "senha123",
+  "document": "12345678901"
 }
+
 ```
 
-### 2. Register User (`POST /api/v1/auth/register`)
-- **Body**:
+
+
+
+* **Público — Autenticar e Obter Token JWT**
+* `POST http://localhost:3000/api/v1/auth/login` (ou `/api/v1/merchants/login`)
+* **Body (JSON):**
 ```json
 {
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "securepassword123",
-  "zipCode": "12345678",
-  "role": "MERCHANT"
+  "email": "contato@empresa.com",
+  "password": "senha123"
 }
+
 ```
 
-### 3. Create Post (`POST /api/v1/posts`)
-- **Header**: `Authorization: Bearer <your_jwt_token>`
-- **Body**:
+
+* *Copie o `token` retornado no JSON.*
+
+
+* **Protegido — Consultar Perfil Autenticado**
+* `GET http://localhost:3000/api/v1/auth/me`
+* **Header:** `Authorization: Bearer <SEU_TOKEN_JWT>`
+
+
+* **Protegido — Listar Todos os Merchants**
+* `GET http://localhost:3000/api/v1/merchants`
+* **Header:** `Authorization: Bearer <SEU_TOKEN_JWT>`
+
+
+* **Protegido — Atualizar Cadastro**
+* `PUT http://localhost:3000/api/v1/merchants/<ID_DO_MERCHANT>`
+* **Header:** `Authorization: Bearer <SEU_TOKEN_JWT>`
+* **Body (JSON):**
 ```json
 {
-  "title": "Summer Showcase",
-  "description": "Check out our newest products available this season!",
-  "imageUrl": "http://localhost:3000/uploads/1773488000000-a1b2c3d4e5f67890.png",
-  "imageId": "a4d3f2e1-89ab-4cde-8012-3456789abcde"
+  "name": "Empresa Teste Atualizada"
 }
+
+```
+
+
+
+
+* **Protegido — Deletar Conta**
+* `DELETE http://localhost:3000/api/v1/merchants/<ID_DO_MERCHANT>`
+* **Header:** `Authorization: Bearer <SEU_TOKEN_JWT>`
 ```
