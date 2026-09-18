@@ -8,10 +8,6 @@ A modular RESTful API built with Node.js, TypeScript, Express, Prisma ORM, MySQL
 
 - **Authentication**: JWT-based authentication and user registration with password hashing (bcrypt).
 - **User Management**: User creation, update, retrieval, and deletion with role attributes (`CONSUMER` / `MERCHANT`) and optional avatar associations.
-- **Post & Comment System**: Merchant post showcases, liking mechanism, and comment threads.
-- **Image Module**: External file storage system (`UPLOAD_DIR`) decoupled from source code, saving image metadata in MySQL using Prisma.
-- **Static File Serving**: Express static route (`/uploads`) for media retrieval across platforms.
-- **Cascade Deletions**: Configured `onDelete: Cascade` in Prisma schema for cleanup of images associated with deleted users or posts.
 
 ---
 
