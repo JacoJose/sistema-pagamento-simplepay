@@ -7,4 +7,4 @@ const router = Router()
 router.use("/auth", authRoutes)
 router.use("/merchants", merchantRoutes)
 
-export default router
+export default router 
