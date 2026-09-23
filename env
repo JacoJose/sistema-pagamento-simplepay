@@ -1,0 +1,6 @@
+PORT=3000
+NODE_ENV=development
+
+DATABASE_URL="mysql://username:password@localhost:3306/simplepay"
+
+JWT_SECRET="TECINFO_2026_BPW_SECRET"

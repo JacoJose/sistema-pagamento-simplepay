@@ -63,4 +63,28 @@ export class MerchantController {
       next(error)
     }
   }
+
+  // [TICKET-BANK-02] cadastrar e atualizar Chave PIX -- Samuel
+  async setPixKey(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const merchantId = req.user?.id
+      const { pixKey, keyType } = req.body
+
+      return res.status(200).json({ message: "Chave PIX configurada com sucesso." })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // [TICKET-BANK-02] configurar URL do Webhook 
+  async updateWebhook(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const merchantId = req.user?.id
+      const { webhookUrl } = req.body
+
+      return res.status(200).json({ message: "URL de Webhook atualizada com sucesso." })
+    } catch (error) {
+      next(error)
+    }
+  }
 }

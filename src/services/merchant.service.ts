@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from "@prisma/client"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { AppError } from "../middlewares/error.middleware"
+import { isValidPixKey } from "../utils/pix"; // Adicionando chaveamento pix -Samuel
 
 const prisma = new PrismaClient()
 
@@ -201,5 +202,18 @@ export class MerchantService {
     })
 
     return { message: "Merchant deleted successfully." }
+  }
+  // adicionando isvalidpixkey dentro do merchantService
+  async updatePixKey(merchantId: string, pixKey: string) {
+    // 1 validar formato da chave PIX informada no Service
+    if (!isValidPixKey(merchantId,pixKey)) {
+      throw new AppError("Formato de chave PIX inválido.", 400)
+    }
+
+    // atualizar ou alterar a chave PIX padrão da empresa no banco via Prisma
+    return await prisma.merchant.update({
+      where: { id: merchantId },
+      data: { pixKey }
+    })
   }
 }

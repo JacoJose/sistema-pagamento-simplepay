@@ -15,4 +15,9 @@ merchantRoutes.get("/:id", authenticateMerchant, (req, res, next) => merchantCon
 merchantRoutes.put("/:id", authenticateMerchant, (req, res, next) => merchantController.update(req, res, next))
 merchantRoutes.delete("/:id", authenticateMerchant, (req, res, next) => merchantController.delete(req, res, next))
 
+// [TICKET-BANK-02] - Samuel
+// rotas cadastrar a chave pix e webhook
+merchantRoutes.post("/keys", authenticateMerchant, (req, res, next) => merchantController.setPixKey(req, res, next))
+merchantRoutes.put("/webhook", authenticateMerchant, (req, res, next) => merchantController.updateWebhook(req, res, next))
+
 export { merchantRoutes }
