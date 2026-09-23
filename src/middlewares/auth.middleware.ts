@@ -1,6 +1,10 @@
 import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
 import { AppError } from "./error.middleware"
+import { Prisma } from "@prisma/client"
+import { PrismaClient } from "@prisma/client/extension"
+
+const prisma = new PrismaClient(); // Só para complementar -Samuel
 
 export interface JwtMerchantPayload {
   id: string
@@ -37,4 +41,20 @@ export const authenticateMerchant = (
   } catch (error) {
     throw new AppError("Invalid or expired authentication token.", 401)
   }
+}
+
+//[TICKET-BANK-02] - Samuel
+export async function requireApiKeyOrJWT(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+
+  if(apiKey) {
+    const merchant = await prisma.merchant.findUnique({where: {apiKey}});
+    if(!merchant) return res.status(401).json({ error: "API Key inválido"});
+    req.user = {
+      id: merchant.id,
+      email: merchant.email
+    }
+    return next();
+  }
+  return authenticateMerchant(req, res, next);
 }
